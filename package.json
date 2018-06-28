@@ -3,13 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "set DEBUG=express-mongo-jwt:server && nodemon ./bin/www"
+    "start": "set DEBUG=express-mongo-jwt:* && nodemon ./bin/www"
   },
   "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
     "cors": "^2.8.4",
     "debug": "^3.1.0",
     "express": "~4.16.0",
     "http-errors": "~1.6.2",
+    "jsonwebtoken": "^8.3.0",
     "mongoose": "^5.1.7",
     "morgan": "~1.9.0"
   },
