@@ -20,4 +20,16 @@ const postSchema = new mongoose.Schema({
   },
 });
 
+postSchema.set('toJSON', {
+  transform: (doc, ret, options) => {
+    const retJson = {
+      _id: ret._id,
+      title: ret.title,
+      content: ret.content,
+      author: ret.author,
+    };
+    return retJson;
+  },
+});
+
 module.exports = mongoose.model('Post', postSchema);

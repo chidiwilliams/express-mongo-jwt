@@ -3,6 +3,7 @@ const Post = require('../models/post');
 const index = (req, res) => {
   Post.find()
     .sort('-createdAt')
+    .populate('author')
     .then((posts) => {
       return res.json(posts);
     })
@@ -11,7 +12,21 @@ const index = (req, res) => {
     });
 };
 
-const show = (req, res) => {};
+const show = (req, res) => {
+  if (!req.body.id) {
+    return res.status(403).json({
+      error: 'Please enter all required fields',
+    });
+  }
+
+  Post.findById(req.body.id)
+    .then((post) => {
+      return res.json(post);
+    })
+    .catch((err) => {
+      return res.status(500).json(err);
+    });
+};
 
 const create = (req, res) => {
   if (!req.body.title || !req.body.content) {
@@ -34,9 +49,46 @@ const create = (req, res) => {
   });
 };
 
-const update = (req, res) => {};
+const update = (req, res) => {
+  if (!req.body.id || !req.body.title || !req.body.content) {
+    return res.status(403).json({
+      error: 'Please enter all required fields',
+    });
+  }
 
-const destroy = (req, res) => {};
+  Post.findById(req.body.id)
+    .then((post) => {
+      post.title = req.body.title;
+      post.content = req.body.content;
+
+      post.save((error, post) => {
+        if (error) {
+          return res.status(500).json({ error });
+        }
+
+        return res.status(200).json({ post });
+      });
+    })
+    .catch((error) => {
+      return res.status(500).json({ error });
+    });
+};
+
+const destroy = (req, res) => {
+  if (!req.body.id) {
+    return res.status(403).json({
+      error: 'Please enter all required fields',
+    });
+  }
+
+  Post.deleteOne({ _id: req.body.id })
+    .then((post) => {
+      return res.json(post);
+    })
+    .catch((err) => {
+      return res.status(500).json(err);
+    });
+};
 
 module.exports = {
   index,

@@ -49,6 +49,7 @@ userSchema.methods.generateJWT = function() {
 userSchema.set('toJSON', {
   transform: (doc, ret, options) => {
     const retJson = {
+      _id: ret._id,
       email: ret.email,
       name: ret.name,
     };
