@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
-const config = require('../../config');
 const User = require('../models/user');
 
 const respondWithUserAndToken = (res, user) => {
@@ -8,15 +7,10 @@ const respondWithUserAndToken = (res, user) => {
   return res
     .status(200)
     .append('Authorization', token)
-    .json({
-      user: {
-        name: user.name,
-        email: user.email,
-      },
-    });
+    .json({ user });
 };
 
-const register = async (req, res) => {
+const register = (req, res) => {
   if (!req.body.name || !req.body.email || !req.body.password) {
     return res.status(403).json({
       error: 'Please enter all required fields',
@@ -28,16 +22,14 @@ const register = async (req, res) => {
   user.email = req.body.email;
   user.setPassword(req.body.password);
 
-  user.save((err, user) => {
-    if (err) {
-      if (err.code === 11000) {
+  user.save((error, user) => {
+    if (error) {
+      if (error.code === 11000) {
         return res.status(409).json({
           error: 'User already exists',
         });
       }
-      return res.status(500).json({
-        error: err,
-      });
+      return res.status(500).json({ error });
     }
     return respondWithUserAndToken(res, user);
   });
@@ -53,7 +45,7 @@ const login = (req, res) => {
 };
 
 const profile = (req, res) => {
-  return res.status(200).json(req.user);
+  return res.status(200).json({ user: req.user });
 };
 
 module.exports = {

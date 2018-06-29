@@ -1,6 +1,6 @@
 const Post = require('../models/post');
 
-function getPosts(req, res) {
+const index = (req, res) => {
   Post.find()
     .sort('-createdAt')
     .then((posts) => {
@@ -8,21 +8,40 @@ function getPosts(req, res) {
     })
     .catch((err) => {
       return res.status(500).json(err);
-    })
-}
+    });
+};
 
-function getPost(req, res) {}
+const show = (req, res) => {};
 
-function addPost(req, res) {}
+const create = (req, res) => {
+  if (!req.body.title || !req.body.content) {
+    return res.status(403).json({
+      error: 'Please enter all required fields',
+    });
+  }
 
-function updatePost(req, res) {}
+  const post = new Post();
+  post.title = req.body.title;
+  post.content = req.body.content;
+  // Generate random ID for the post
+  post.author = req.user._id;
 
-function deletePost(req, res) {}
+  post.save((err, post) => {
+    if (err) {
+      return res.status(500).json({ err });
+    }
+    return res.status(200).json({ post });
+  });
+};
+
+const update = (req, res) => {};
+
+const destroy = (req, res) => {};
 
 module.exports = {
-  getPosts,
-  getPost,
-  addPost,
-  updatePost,
-  deletePost,
+  index,
+  show,
+  create,
+  update,
+  destroy,
 };

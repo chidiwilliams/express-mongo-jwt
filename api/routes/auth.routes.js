@@ -4,9 +4,6 @@ const passport = require('passport');
 const router = express.Router();
 const debug = require('debug')('express-mongo-jwt:authroutes');
 
-const jwt = require('jsonwebtoken');
-const config = require('../../config');
-
 router.post('/register', AuthController.register);
 router.post(
   '/login',
@@ -16,19 +13,7 @@ router.post(
 router.get(
   '/profile',
   passport.authenticate('jwt', { session: false }),
-  function(req, res) {
-    res.send({
-      user: {
-        name: req.user.name,
-        email: req.user.email,
-      },
-    });
-  }
+  AuthController.profile
 );
-// router.get(
-//   '/profile',
-//   passport.authenticate('jwt', { session: false }),
-//   AuthController.profile
-// );
 
 module.exports = router;

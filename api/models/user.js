@@ -46,4 +46,14 @@ userSchema.methods.generateJWT = function() {
   );
 };
 
+userSchema.set('toJSON', {
+  transform: (doc, ret, options) => {
+    const retJson = {
+      email: ret.email,
+      name: ret.name,
+    };
+    return retJson;
+  },
+});
+
 module.exports = mongoose.model('User', userSchema);
