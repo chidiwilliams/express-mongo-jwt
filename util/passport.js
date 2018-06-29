@@ -1,10 +1,11 @@
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
-const User = require('../api/models/user');
+const passport = require('passport');
+const passportLocal = require('passport-local');
 const passportJWT = require('passport-jwt');
+const User = require('../api/models/user');
 const config = require('../config');
 
+const LocalStrategy = passportLocal.Strategy;
 const JWTStrategy = passportJWT.Strategy;
 const ExtractJWT = passportJWT.ExtractJwt;
 
@@ -13,31 +14,23 @@ passport.use(
     {
       usernameField: 'email',
     },
-    function(username, password, done) {
-      User.findOne(
-        {
-          email: username,
-        },
-        function(err, user) {
-          if (err) {
-            return done(err);
-          }
-
-          if (!user) {
-            return done(null, false, {
-              message: 'User not found',
-            });
-          }
-
-          if (!user.checkPassword(password)) {
-            return done(null, false, {
-              message: 'Invalid password',
-            });
-          }
-
-          return done(null, user);
+    async (email, password, done) => {
+      try {
+        user = await User.findOne({ email: username });
+        if (!user) {
+          return done(null, false, {
+            message: 'User not found',
+          });
         }
-      );
+        if (!user.checkPassword(password)) {
+          return done(null, false, {
+            message: 'Invalid password',
+          });
+        }
+        return done(null, user);
+      } catch (error) {
+        return done(error);
+      }
     }
   )
 );
@@ -48,14 +41,13 @@ passport.use(
       jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
       secretOrKey: config.appSecret,
     },
-    (jwtPayload, cb) => {
-      return User.findById(jwtPayload.id)
-        .then((user) => {
-          return cb(null, user);
-        })
-        .catch((err) => {
-          return cb(err);
-        });
+    async (jwtPayload, cb) => {
+      try {
+        const user = User.findById(jwtPayload.id);
+        return cb(null, user);
+      } catch (error) {
+        return cb(error);
+      }
     }
   )
 );
