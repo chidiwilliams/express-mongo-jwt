@@ -1,17 +1,17 @@
 const User = require('../models/user');
 
-function getAll(req, res) {
+function getUsers(req, res) {
   User.find()
-    .select('name email -_id')
-    .sort('-dateAdded')
-    .exec((err, users) => {
-      if (err) {
-        return res.status(500).send(err);
-      }
-      return res.json({ users });
+    .select('name email')
+    .sort('-createdAt')
+    .then((users) => {
+      return res.json({ user });
+    })
+    .catch((err) => {
+      return res.status(500).json(err);
     });
 }
 
 module.exports = {
-  getAll,
+  getUsers,
 };

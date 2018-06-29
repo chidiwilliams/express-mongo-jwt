@@ -4,8 +4,9 @@ const logger = require('morgan');
 const mongoose = require('mongoose');
 const debug = require('debug')('express-mongo-jwt:app');
 const cors = require('cors');
-const indexRouter = require('./api/routes/index.routes');
+require('./util/passport');
 const userRouter = require('./api/routes/user.routes');
+const postRouter = require('./api/routes/post.routes');
 const authRouter = require('./api/routes/auth.routes');
 const config = require('./config');
 
@@ -31,9 +32,9 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/', indexRouter);
 app.use('/api', userRouter);
 app.use('/api', authRouter);
+app.use('/api', postRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

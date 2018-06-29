@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const passport = require('passport');
 const config = require('../../config');
 const debug = require('debug')('express-mongo-jwt:auth');
 const User = require('../models/user');
@@ -40,44 +41,39 @@ function register(req, res) {
 }
 
 function login(req, res) {
-  if (!req.body.username || !req.body.password) {
-    return res.status(403).json({});
-  }
-
-  const username = req.body.username;
-  const password = req.body.password;
-
-  User.findOne({ username }, (err, user) => {
+  passport.authenticate('local', { session: false }, (err, user, db_error) => {
     if (err) {
-      return res.status(500).send(err);
+      return res.status(500).json(err);
     }
 
     if (!user) {
-      return res.status(401).send({
-        success: false,
-        msg: 'Authentication failed. User not found.',
-      });
+      return res.status(401).json(db_error);
     }
 
-    // check if password matches
-    user.comparePassword(password, (passwordError, isMatch) => {
-      if (passwordError || !isMatch) {
-        return res.status(401).send({
-          success: false,
-          msg: 'Authentication failed',
-        });
+    req.login(user, { session: false }, (err) => {
+      if (err) {
+        return res.status(500).json(err);
       }
 
-      const token = jwt.sign(user, config.appSecret);
-      return res.json({
-        success: true,
-        token: `JWT ${token}`,
-      });
+      return res
+        .status(200)
+        .append('Authorization', 'Bearer ' + user.generateJWT())
+        .json({
+          user: {
+            name: user.name,
+            email: user.email,
+          },
+        });
     });
-  });
+  })(req, res);
+}
+
+function profile(req, res) {
+  return res.status(200).json(req.user);
 }
 
 module.exports = {
   register,
   login,
+  profile,
 };
