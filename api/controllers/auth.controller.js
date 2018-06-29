@@ -1,13 +1,25 @@
 const jwt = require('jsonwebtoken');
 const passport = require('passport');
 const config = require('../../config');
-const debug = require('debug')('express-mongo-jwt:auth');
 const User = require('../models/user');
 
-function register(req, res) {
+const respondWithUserAndToken = (res, user) => {
+  const token = `Bearer ${user.generateJWT()}`;
+  return res
+    .status(200)
+    .append('Authorization', token)
+    .json({
+      user: {
+        name: user.name,
+        email: user.email,
+      },
+    });
+};
+
+const register = async (req, res) => {
   if (!req.body.name || !req.body.email || !req.body.password) {
     return res.status(403).json({
-      message: 'Please enter all required fields',
+      error: 'Please enter all required fields',
     });
   }
 
@@ -16,61 +28,34 @@ function register(req, res) {
   user.email = req.body.email;
   user.setPassword(req.body.password);
 
-  user
-    .save()
-    .then((createdUser) => {
-      return res
-        .status(200)
-        .append('Authorization', 'Bearer ' + createdUser.generateJWT())
-        .json({
-          user: createdUser,
-        });
-    })
-    .catch((err) => {
-      debug(err);
-      if (err.code === 11000) {
-        return res.status(409).json({
-          message: 'User already exists',
-        });
-      } else {
-        return res.status(500).json({
-          error: err,
-        });
-      }
-    });
-}
-
-function login(req, res) {
-  passport.authenticate('local', { session: false }, (err, user, db_error) => {
-    if (err) {
-      return res.status(500).json(err);
+  try {
+    const createdUser = await user.save();
+    debug(createdUser);
+    return respondWithUserAndToken(res, createdUser);
+  } catch (err) {
+    if (err.code === 11000) {
+      return res.status(409).json({
+        error: 'User already exists',
+      });
     }
-
-    if (!user) {
-      return res.status(401).json(db_error);
-    }
-
-    req.login(user, { session: false }, (err) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
-
-      return res
-        .status(200)
-        .append('Authorization', 'Bearer ' + user.generateJWT())
-        .json({
-          user: {
-            name: user.name,
-            email: user.email,
-          },
-        });
+    return res.status(500).json({
+      error: err,
     });
-  })(req, res);
-}
+  }
+};
 
-function profile(req, res) {
+const login = (req, res) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: req.authInfo.message });
+  }
+
+  return respondWithUserAndToken(res, user);
+};
+
+const profile = (req, res) => {
   return res.status(200).json(req.user);
-}
+};
 
 module.exports = {
   register,

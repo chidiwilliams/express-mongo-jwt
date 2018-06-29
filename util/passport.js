@@ -14,23 +14,26 @@ passport.use(
     {
       usernameField: 'email',
     },
-    async (email, password, done) => {
-      try {
-        user = await User.findOne({ email: username });
+    (username, password, done) => {
+      const user = User.findOne({ email: username }, (err, user) => {
+        if (err) {
+          return done(error);
+        }
+
         if (!user) {
           return done(null, false, {
-            message: 'User not found',
+            message: 'Incorrect email address',
           });
         }
+
         if (!user.checkPassword(password)) {
           return done(null, false, {
-            message: 'Invalid password',
+            message: 'Incorrect password',
           });
         }
+
         return done(null, user);
-      } catch (error) {
-        return done(error);
-      }
+      });
     }
   )
 );
