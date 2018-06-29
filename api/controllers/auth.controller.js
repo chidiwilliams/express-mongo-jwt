@@ -28,21 +28,19 @@ const register = async (req, res) => {
   user.email = req.body.email;
   user.setPassword(req.body.password);
 
-  try {
-    // TODO: Respond properly...
-    const createdUser = await user.save();
-    debug(createdUser);
-    return respondWithUserAndToken(res, createdUser);
-  } catch (err) {
-    if (err.code === 11000) {
-      return res.status(409).json({
-        error: 'User already exists',
+  user.save((err, user) => {
+    if (err) {
+      if (err.code === 11000) {
+        return res.status(409).json({
+          error: 'User already exists',
+        });
+      }
+      return res.status(500).json({
+        error: err,
       });
     }
-    return res.status(500).json({
-      error: err,
-    });
-  }
+    return respondWithUserAndToken(res, user);
+  });
 };
 
 const login = (req, res) => {
