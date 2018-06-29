@@ -29,6 +29,7 @@ const register = async (req, res) => {
   user.setPassword(req.body.password);
 
   try {
+    // TODO: Respond properly...
     const createdUser = await user.save();
     debug(createdUser);
     return respondWithUserAndToken(res, createdUser);

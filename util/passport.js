@@ -1,13 +1,11 @@
 const mongoose = require('mongoose');
 const passport = require('passport');
-const passportLocal = require('passport-local');
-const passportJWT = require('passport-jwt');
+const LocalStrategy = require('passport-local').Strategy;
+const JWTStrategy = require('passport-jwt').Strategy;
+const ExtractJWT = require('passport-jwt').ExtractJwt;
 const User = require('../api/models/user');
 const config = require('../config');
-
-const LocalStrategy = passportLocal.Strategy;
-const JWTStrategy = passportJWT.Strategy;
-const ExtractJWT = passportJWT.ExtractJwt;
+const debug = require('debug')('express-mongo-jwt:passport');
 
 passport.use(
   new LocalStrategy(
@@ -38,19 +36,18 @@ passport.use(
   )
 );
 
+const jwtOptions = {
+  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+  secretOrKey: config.appSecret,
+};
+
 passport.use(
-  new JWTStrategy(
-    {
-      jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.appSecret,
-    },
-    async (jwtPayload, cb) => {
-      try {
-        const user = User.findById(jwtPayload.id);
-        return cb(null, user);
-      } catch (error) {
-        return cb(error);
+  new JWTStrategy(jwtOptions, (jwtPayload, done) => {
+    const user = User.findById(jwtPayload._id, (err, user) => {
+      if (err) {
+        return done(err);
       }
-    }
-  )
+      return done(null, user);
+    });
+  })
 );

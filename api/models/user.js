@@ -32,15 +32,15 @@ userSchema.methods.checkPassword = function(password) {
 
 userSchema.methods.generateJWT = function() {
   const expiry = new Date();
-  expiry.setDate(expiry.getDate + 7);
+  expiry.setDate(expiry.getDate() + 7);
+  const expTime = parseInt(expiry.getTime() / 1000);
 
   const secret = config.appSecret;
   return jwt.sign(
     {
-      _id: this._id,
-      email: this.email,
       name: this.name,
-      exp: parseInt(expiry.getTime() / 1000),
+      email: this.email,
+      exp: expTime,
     },
     secret
   );
