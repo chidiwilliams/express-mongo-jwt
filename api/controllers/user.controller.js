@@ -1,5 +1,11 @@
 const User = require('../models/user');
 
+/**
+ * Returns all users
+ *
+ * @param {*} req
+ * @param {*} res
+ */
 const getUsers = (req, res) => {
   User.find()
     .sort('-createdAt')

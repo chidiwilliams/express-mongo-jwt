@@ -1,5 +1,11 @@
 const Post = require('../models/post');
 
+/**
+ * Populates the Post object before sending response
+ *
+ * @param {*} res
+ * @param {*} post
+ */
 const populateAndRespond = (res, post) => {
   Post.populate(post, 'author', (err) => {
     if (err) {
@@ -9,6 +15,12 @@ const populateAndRespond = (res, post) => {
   });
 };
 
+/**
+ * Return all posts
+ *
+ * @param {*} req
+ * @param {*} res
+ */
 const index = (req, res) => {
   Post.find()
     .sort('-createdAt')
@@ -21,6 +33,12 @@ const index = (req, res) => {
     });
 };
 
+/**
+ * Returns one post by id in req.params.id
+ *
+ * @param {*} req
+ * @param {*} res
+ */
 const show = (req, res) => {
   Post.findById(req.params.id)
     .populate('author')
@@ -32,6 +50,14 @@ const show = (req, res) => {
     });
 };
 
+/**
+ * Create a post.
+ * Required: req.body.title and req.body.content
+ *
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
 const create = (req, res) => {
   if (!req.body.title || !req.body.content) {
     return res.status(403).json({
@@ -55,14 +81,22 @@ const create = (req, res) => {
   });
 };
 
-const update = (req, res) => {
-  if (!req.body.id || !req.body.title || !req.body.content) {
+/**
+ * Update a post by id in req.params.id
+ * Required: req.body.title and req.body.content
+ *
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
+update = (req, res) => {
+  if (!req.body.title || !req.body.content) {
     return res.status(403).json({
       error: 'Please enter all required fields',
     });
   }
 
-  Post.findById(req.body.id)
+  Post.findById(req.params.id)
     .then((post) => {
       post.title = req.body.title;
       post.content = req.body.content;
@@ -72,6 +106,7 @@ const update = (req, res) => {
           return res.status(500).json({ error });
         }
 
+        // Populate the author field before returning post object
         return populateAndRespond(res, post);
       });
     })
@@ -80,16 +115,19 @@ const update = (req, res) => {
     });
 };
 
+/**
+ * Delete a post by id in req.params.id
+ *
+ * @param {*} req
+ * @param {*} res
+ * @returns
+ */
 const destroy = (req, res) => {
-  if (!req.body.id) {
-    return res.status(403).json({
-      error: 'Please enter all required fields',
-    });
-  }
-
-  Post.deleteOne({ _id: req.body.id })
+  Post.deleteOne({ _id: req.params.id })
     .then((post) => {
-      return res.json(post);
+      return res.json({
+        message: 'Deleted successfully',
+      });
     })
     .catch((err) => {
       return res.status(500).json(err);

@@ -36,13 +36,11 @@ passport.use(
   )
 );
 
-const jwtOptions = {
-  jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-  secretOrKey: config.appSecret,
-};
-
 passport.use(
-  new JWTStrategy(jwtOptions, (jwtPayload, done) => {
+  new JWTStrategy({
+    jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+    secretOrKey: config.appSecret,
+  }, (jwtPayload, done) => {
     const user = User.findById(jwtPayload._id, (err, user) => {
       if (err) {
         return done(err);
