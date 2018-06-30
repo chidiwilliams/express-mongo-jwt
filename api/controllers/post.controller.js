@@ -1,17 +1,24 @@
 const Post = require('../models/post');
+const createError = require('http-errors');
 
 /**
  * Populates the Post object before sending response
  *
  * @param {*} res
- * @param {*} post
+ * @param {*} posts
+ * @param {*} next
  */
-const populateAndRespond = (res, post) => {
-  Post.populate(post, 'author', (err) => {
+const populateAndRespond = (posts, res, next) => {
+  Post.populate(posts, 'author', (err) => {
     if (err) {
-      return res.status(500).json({ err });
+      return next(createError(500, err));
     }
-    return res.status(200).json({ post });
+
+    // Returns object key as post if only one post is received,
+    // but posts if multiple posts are received
+    return posts.length === 1
+      ? res.status(200).json({ post: posts })
+      : res.status(200).json({ posts });
   });
 };
 
@@ -20,17 +27,17 @@ const populateAndRespond = (res, post) => {
  *
  * @param {*} req
  * @param {*} res
+ * @param {*} next
  */
-const index = (req, res) => {
-  Post.find()
-    .sort('-createdAt')
-    .populate('author')
-    .then((posts) => {
-      return res.json(posts);
-    })
-    .catch((err) => {
-      return res.status(500).json(err);
-    });
+const index = async (req, res, next) => {
+  try {
+    const posts = await Post.find()
+      .sort('-createdAt')
+      .exec();
+    return populateAndRespond(posts, res, next);
+  } catch (error) {
+    return next(createError(500, error));
+  }
 };
 
 /**
@@ -38,16 +45,18 @@ const index = (req, res) => {
  *
  * @param {*} req
  * @param {*} res
+ * @param {*} next
  */
-const show = (req, res) => {
-  Post.findById(req.params.id)
-    .populate('author')
-    .then((post) => {
-      return res.json(post);
-    })
-    .catch((err) => {
-      return res.status(500).json(err);
-    });
+const show = async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.id).exec();
+    return populateAndRespond(posts, res, next);
+  } catch (error) {
+    if (error.name === 'CastError') {
+      return next(createError(404));
+    }
+    return next(createError(500, error));
+  }
 };
 
 /**
@@ -56,9 +65,10 @@ const show = (req, res) => {
  *
  * @param {*} req
  * @param {*} res
+ * @param {*} next
  * @returns
  */
-const create = (req, res) => {
+const create = async (req, res, next) => {
   if (!req.body.title || !req.body.content) {
     return res.status(403).json({
       error: 'Please enter all required fields',
@@ -71,25 +81,23 @@ const create = (req, res) => {
   // Generate random ID for the post
   post.author = req.user._id;
 
-  post.save((err, post) => {
-    if (err) {
-      return res.status(500).json({ err });
-    }
-
-    // Populate the author field before returning post object
-    return populateAndRespond(res, post);
-  });
+  try {
+    const savedPost = post.save().exec();
+    return populateAndRespond(savedPost, res, next);
+  } catch (error) {
+    return res.status(500).json({ error });
+  }
 };
 
 /**
- * Update a post by id in req.params.id
- * Required: req.body.title and req.body.content
+ *
  *
  * @param {*} req
  * @param {*} res
+ * @param {*} next
  * @returns
  */
-update = (req, res) => {
+const update = (req, res, next) => {
   if (!req.body.title || !req.body.content) {
     return res.status(403).json({
       error: 'Please enter all required fields',
@@ -107,7 +115,7 @@ update = (req, res) => {
         }
 
         // Populate the author field before returning post object
-        return populateAndRespond(res, post);
+        return populateAndRespond(post, res, next);
       });
     })
     .catch((error) => {
@@ -120,9 +128,10 @@ update = (req, res) => {
  *
  * @param {*} req
  * @param {*} res
+ * @param {*} next
  * @returns
  */
-const destroy = (req, res) => {
+const destroy = (req, res, next) => {
   Post.deleteOne({ _id: req.params.id })
     .then((post) => {
       return res.json({
@@ -130,7 +139,7 @@ const destroy = (req, res) => {
       });
     })
     .catch((err) => {
-      return res.status(500).json(err);
+      return next(createError(500, err));
     });
 };
 

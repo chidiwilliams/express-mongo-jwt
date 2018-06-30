@@ -1,4 +1,3 @@
-const createError = require('http-errors');
 const express = require('express');
 const logger = require('morgan');
 const mongoose = require('mongoose');
@@ -10,6 +9,8 @@ const userRouter = require('./api/routes/user.routes');
 const postRouter = require('./api/routes/post.routes');
 const authRouter = require('./api/routes/auth.routes');
 const config = require('./config');
+const debug = require('debug')('express-mongo-jwt:app');
+const createError = require('http-errors');
 
 const app = express();
 
@@ -30,7 +31,9 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
-  res.status(err.status || 500).json({ error: err });
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' ? err.message : err.stack,
+  });
 });
 
 module.exports = app;
