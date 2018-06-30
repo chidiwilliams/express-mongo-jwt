@@ -7,7 +7,7 @@ let userSchema = new mongoose.Schema(
   {
     _id: { type: mongoose.Schema.Types.ObjectId, auto: true },
     email: { type: String, unique: true, required: true },
-    name: { type: String, required: true },
+    updatedAt: { type: String, required: true },
     hash: String,
     salt: String,
   },
@@ -52,6 +52,8 @@ userSchema.set('toJSON', {
       _id: ret._id,
       email: ret.email,
       name: ret.name,
+      createdAt: ret.createdAt,
+      updatedAt: ret.updatedAt,
     };
     return retJson;
   },

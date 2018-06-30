@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const debug = require('debug')('express-mongo-jwt:postmodel');
 
 const postSchema = new mongoose.Schema(
   {
@@ -32,9 +33,18 @@ postSchema.set('toJSON', {
       title: ret.title,
       content: ret.content,
       author: ret.author,
+      createdAt: ret.createdAt,
+      updatedAt: ret.updatedAt,
     };
     return retJson;
   },
 });
+
+const populateFields = function(next) {
+  this.populate('author');
+  next();
+};
+
+postSchema.pre('find', populateFields).pre('findOne', populateFields);
 
 module.exports = mongoose.model('Post', postSchema);

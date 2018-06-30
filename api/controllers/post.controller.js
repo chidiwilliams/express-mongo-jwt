@@ -4,8 +4,8 @@ const createError = require('http-errors');
 /**
  * Populates the Post object before sending response
  *
- * @param {*} res
  * @param {*} posts
+ * @param {*} res
  * @param {*} next
  */
 const populateAndRespond = (posts, res, next) => {
@@ -34,7 +34,7 @@ const index = async (req, res, next) => {
     const posts = await Post.find()
       .sort('-createdAt')
       .exec();
-    return populateAndRespond(posts, res, next);
+    return res.status(200).json({ posts });
   } catch (error) {
     return next(createError(500, error));
   }
@@ -50,7 +50,7 @@ const index = async (req, res, next) => {
 const show = async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id).exec();
-    return populateAndRespond(posts, res, next);
+    return res.status(200).json({ post });
   } catch (error) {
     if (error.name === 'CastError') {
       return next(createError(404));
@@ -70,9 +70,7 @@ const show = async (req, res, next) => {
  */
 const create = async (req, res, next) => {
   if (!req.body.title || !req.body.content) {
-    return res.status(403).json({
-      error: 'Please enter all required fields',
-    });
+    return next(createError(403, 'Please enter all required fields'));
   }
 
   const post = new Post();
@@ -82,10 +80,10 @@ const create = async (req, res, next) => {
   post.author = req.user._id;
 
   try {
-    const savedPost = post.save().exec();
+    const savedPost = await post.save();
     return populateAndRespond(savedPost, res, next);
   } catch (error) {
-    return res.status(500).json({ error });
+    return next(createError(500, error));
   }
 };
 
@@ -97,30 +95,21 @@ const create = async (req, res, next) => {
  * @param {*} next
  * @returns
  */
-const update = (req, res, next) => {
+const update = async (req, res, next) => {
   if (!req.body.title || !req.body.content) {
-    return res.status(403).json({
-      error: 'Please enter all required fields',
-    });
+    return next(createError(403, 'Please enter all required fields'));
   }
 
-  Post.findById(req.params.id)
-    .then((post) => {
-      post.title = req.body.title;
-      post.content = req.body.content;
+  try {
+    const post = await Post.findById(req.params.id).exec();
+    post.title = req.body.title;
+    post.content = req.body.content;
 
-      post.save((error, post) => {
-        if (error) {
-          return res.status(500).json({ error });
-        }
-
-        // Populate the author field before returning post object
-        return populateAndRespond(post, res, next);
-      });
-    })
-    .catch((error) => {
-      return res.status(500).json({ error });
-    });
+    const savedPost = await post.save();
+    return populateAndRespond(savedPost, res, next);
+  } catch (error) {
+    return next(createError(500, error));
+  }
 };
 
 /**
@@ -131,16 +120,13 @@ const update = (req, res, next) => {
  * @param {*} next
  * @returns
  */
-const destroy = (req, res, next) => {
-  Post.deleteOne({ _id: req.params.id })
-    .then((post) => {
-      return res.json({
-        message: 'Deleted successfully',
-      });
-    })
-    .catch((err) => {
-      return next(createError(500, err));
-    });
+const destroy = async (req, res, next) => {
+  try {
+    await Post.findByIdAndRemove(req.params.id).exec();
+    return res.status(200).json({ message: 'Deleted successfully' });
+  } catch (error) {
+    return next(createError(500, err));
+  }
 };
 
 module.exports = {

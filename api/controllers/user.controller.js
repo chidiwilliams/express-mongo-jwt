@@ -6,17 +6,17 @@ const User = require('../models/user');
  * @param {*} req
  * @param {*} res
  */
-const getUsers = (req, res) => {
-  User.find()
-    .sort('-createdAt')
-    .then((users) => {
-      return res.status(200).json({ users });
-    })
-    .catch((err) => {
-      return res.status(500).json(err);
-    });
+const index = async (req, res) => {
+  try {
+    const users = await User.find()
+      .sort('-createdAt')
+      .exec();
+    return res.status(200).json({ users });
+  } catch (error) {
+    return next(createError(500, error));
+  }
 };
 
 module.exports = {
-  getUsers,
+  index,
 };
