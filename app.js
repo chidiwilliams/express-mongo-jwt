@@ -36,4 +36,9 @@ app.use(function(err, req, res, next) {
   });
 });
 
+// Start server and listen on config.port
+app.listen(config.PORT, () => {
+  debug('Listening on ' + config.PORT);
+});
+
 module.exports = app;

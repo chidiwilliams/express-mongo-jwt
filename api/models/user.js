@@ -35,7 +35,7 @@ userSchema.methods.generateJWT = function() {
   expiry.setDate(expiry.getDate() + 7);
   const expTime = parseInt(expiry.getTime() / 1000);
 
-  const secret = config.appSecret;
+  const secret = config.APP_SECRET;
   return jwt.sign(
     {
       name: this.name,

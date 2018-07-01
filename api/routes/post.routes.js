@@ -5,7 +5,7 @@ const createError = require('http-errors');
 
 const router = express.Router();
 
-router.all('/posts', passport.authenticate('jwt', { session: false }));
+// router.all('/posts', passport.authenticate('jwt', { session: false }));
 
 router.get('/posts', PostController.index);
 router.get('/posts/:id', PostController.show);

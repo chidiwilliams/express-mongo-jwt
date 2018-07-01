@@ -5,14 +5,14 @@ const config = require('../config');
 mongoose.Promise = global.Promise;
 
 if (process.env.NODE_ENV !== 'test') {
-  mongoose.connect(config.mongoURL).catch((err) => {
+  mongoose.connect(config.MONGO_URL).catch((err) => {
     debug('Please make sure Mongodb is installed and running!');
     process.exit(1);
   });
 }
 
 mongoose.connection.on('connected', function() {
-  debug('Mongoose connected to ' + config.mongoURL);
+  debug('Mongoose connected to ' + config.MONGO_URL);
 });
 
 mongoose.connection.on('error', function(err) {

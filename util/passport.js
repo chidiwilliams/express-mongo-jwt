@@ -39,7 +39,7 @@ passport.use(
 passport.use(
   new JWTStrategy({
     jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey: config.appSecret,
+    secretOrKey: config.APP_SECRET,
   }, (jwtPayload, done) => {
     const user = User.findById(jwtPayload._id, (err, user) => {
       if (err) {
