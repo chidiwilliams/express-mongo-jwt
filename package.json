@@ -20,9 +20,6 @@
     "passport-local": "^1.0.0"
   },
   "devDependencies": {
-    "ava": "^0.25.0",
-    "mockgoose": "^7.3.5",
-    "nodemon": "^1.17.5",
-    "supertest": "^3.1.0"
+    "nodemon": "^1.17.5"
   }
 }
