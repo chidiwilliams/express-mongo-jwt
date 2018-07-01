@@ -102,10 +102,10 @@ const update = async (req, res, next) => {
 
   try {
     const post = await Post.findById(req.params.id).exec();
-    post.title = req.body.title;
-    post.content = req.body.content;
+    // Copy the contents of req.body (post attributes)
+    // to the post object and then save
+    const savedPost = await Object.assign(post, req.body).save();
 
-    const savedPost = await post.save();
     return populateAndRespond(savedPost, res, next);
   } catch (error) {
     return next(createError(500, error));
